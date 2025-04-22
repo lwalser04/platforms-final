@@ -9,9 +9,13 @@ import { ThemedView } from '@/components/ThemedView';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 
 const walserLocations = [
-  { name: 'Walser Minneapolis', lat: 44.9778, lon: -93.2650 },
-  { name: 'Walser St. Paul', lat: 44.9537, lon: -93.0900 },
-  { name: 'Walser Bloomington', lat: 44.8408, lon: -93.2983 },
+
+  { name: 'Walser Buick GMC Bloomington', address: '4601 American Boulevard West Bloomington, MN 55437', lat: 44.85738, lon: -93.33818},
+  { name: 'Walser Polar Chevorlet', address : '1801 County Road F East White Bear Lake, MN 55110', lat: 45.0597, lon: -93.0166 },
+  { name: 'Walser Chrysler Jeep Dodge Ram', address: '314 Main Street Hopkins, MN 55343', lat: 44.9245, lon: -93.4018},
+  { name: 'Walser Honda Burnsville', address: '14800 Buck Hill Road Burnsville, MN 55306', lat: 44.73305, lon: -93.28595},
+  { name: "Walser Genesis of Kansas City", address: '7722 Metcalf Ave Overland Park, KS 66204', lat: 38.9882762 , lon: -94.668206},
+  { name: 'Walser Porsche Wichita', address: '10900 East 13th Street Wichita, KS 67206', lat: 37.7095, lon: -97.2155}
 ];
 
 export default function HomeScreen() {
