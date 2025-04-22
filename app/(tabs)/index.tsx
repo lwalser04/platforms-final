@@ -9,50 +9,92 @@ import { ThemedView } from '@/components/ThemedView';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 
 const walserLocations = [
-
-  { name: 'Walser Buick GMC Bloomington', address: '4601 American Boulevard West Bloomington, MN 55437', lat: 44.85738, lon: -93.33818},
-  { name: 'Walser Polar Chevorlet', address : '1801 County Road F East White Bear Lake, MN 55110', lat: 45.0597, lon: -93.0166 },
-  { name: 'Walser Chrysler Jeep Dodge Ram', address: '314 Main Street Hopkins, MN 55343', lat: 44.9245, lon: -93.4018},
-  { name: 'Walser Honda Burnsville', address: '14800 Buck Hill Road Burnsville, MN 55306', lat: 44.73305, lon: -93.28595},
-  { name: "Walser Genesis of Kansas City", address: '7722 Metcalf Ave Overland Park, KS 66204', lat: 38.9882762 , lon: -94.668206},
-  { name: 'Walser Porsche Wichita', address: '10900 East 13th Street Wichita, KS 67206', lat: 37.7095, lon: -97.2155}
+  { name: 'Walser Buick GMC Bloomington', address: '4601 American Boulevard West Bloomington, MN 55437', lat: 44.85738, lon: -93.33818 },
+  { name: 'Walser Polar Chevrolet', address: '1801 County Road F East White Bear Lake, MN 55110', lat: 45.0597, lon: -93.0166 },
+  { name: 'Walser Chrysler Jeep Dodge Ram', address: '314 Main Street Hopkins, MN 55343', lat: 44.9245, lon: -93.4018 },
+  { name: 'Walser Honda Burnsville', address: '14800 Buck Hill Road Burnsville, MN 55306', lat: 44.73305, lon: -93.28595 },
+  { name: "Walser Genesis of Kansas City", address: '7722 Metcalf Ave Overland Park, KS 66204', lat: 38.9882762, lon: -94.668206 },
+  { name: 'Walser Porsche Wichita', address: '10900 East 13th Street Wichita, KS 67206', lat: 37.7095, lon: -97.2155 },
 ];
 
 export default function HomeScreen() {
-  const [nearestLocations, setNearestLocations] = useState<
-    { name: string; distance: number }[]
-  >([]);
+  const [closestLocation, setClosestLocation] = useState<string | null>(null);
+  const [closestAddress, setClosestAddress] = useState<string | null>(null);
+  const [distanceToNearest, setDistanceToNearest] = useState<number | null>(null);
+  const [nextClosestLocation, setNextClosestLocation] = useState<string | null>(null);
+  const [nextClosestAddress, setNextClosestAddress] = useState<string | null>(null);
+  const [nextDistance, setNextDistance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userCoords, setUserCoords] = useState<{ latitude: number, longitude: number } | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setNearestLocations([{ name: 'Permission denied', distance: 0 }]);
+          setClosestLocation('Permission denied');
           setLoading(false);
           return;
         }
 
         const location = await Location.getCurrentPositionAsync({});
+        setUserCoords({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
         const userCoords = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         };
 
-        const sorted = walserLocations
-          .map((loc) => ({
-            name: loc.name,
-            distance: getDistance(userCoords, {
-              latitude: loc.lat,
-              longitude: loc.lon,
-            }),
-          }))
-          .sort((a, b) => a.distance - b.distance);
+        // Find the closest and next closest locations
+        let nearest = walserLocations[0];
+        let minDistance = getDistance(userCoords, {
+          latitude: nearest.lat,
+          longitude: nearest.lon,
+        });
 
-        setNearestLocations(sorted.slice(0, 2));
+        for (let i = 1; i < walserLocations.length; i++) {
+          const distance = getDistance(userCoords, {
+            latitude: walserLocations[i].lat,
+            longitude: walserLocations[i].lon,
+          });
+
+          if (distance < minDistance) {
+            nearest = walserLocations[i];
+            minDistance = distance;
+          }
+        }
+
+        setClosestLocation(nearest.name);
+        setClosestAddress(nearest.address);
+        setDistanceToNearest(minDistance);
+
+        // Next closest location logic
+        let nextNearest = walserLocations[1];
+        let nextMinDistance = getDistance(userCoords, {
+          latitude: nextNearest.lat,
+          longitude: nextNearest.lon,
+        });
+
+        for (let i = 2; i < walserLocations.length; i++) {
+          const distance = getDistance(userCoords, {
+            latitude: walserLocations[i].lat,
+            longitude: walserLocations[i].lon,
+          });
+
+          if (distance < nextMinDistance) {
+            nextNearest = walserLocations[i];
+            nextMinDistance = distance;
+          }
+        }
+
+        setNextClosestLocation(nextNearest.name);
+        setNextClosestAddress(nextNearest.address);
+        setNextDistance(nextMinDistance);
       } catch (error) {
-        setNearestLocations([{ name: 'Unable to get location', distance: 0 }]);
+        setClosestLocation('Unable to get location');
       } finally {
         setLoading(false);
       }
@@ -70,19 +112,52 @@ export default function HomeScreen() {
       }
     >
       <ThemedView style={styles.content}>
+        
+
         {loading ? (
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
-          nearestLocations.map((loc, index) => (
-            <View key={index} style={styles.locationBox}>
-              <ThemedText type="default" style={styles.closest}>
-                {index === 0 ? 'Closest Location:' : 'Next Closest:'} {loc.name}
-              </ThemedText>
+          <View style={styles.locationBox}>
+            {/* Closest Dealer */}
+            <ThemedText type="default" style={styles.dealerTitle}>
+              Closest Dealer
+            </ThemedText>
+
+            <ThemedText type="default" style={styles.closest}>
+              {closestLocation}
+            </ThemedText>
+            <ThemedText type="default" style={styles.address}>
+              {closestAddress}
+            </ThemedText>
+
+            {distanceToNearest !== null && (
               <ThemedText type="default" style={styles.distance}>
-                Distance: {(loc.distance / 1609.34).toFixed(2)} miles
+                Distance: {(distanceToNearest / 1609.34).toFixed(2)} miles
               </ThemedText>
-            </View>
-          ))
+            )}
+          </View>
+        )}
+
+        {/* Next Closest Dealer */}
+        {userCoords && (
+          <View style={styles.locationBox}>
+            <ThemedText type="default" style={styles.dealerTitle}>
+              Next Closest Dealer
+            </ThemedText>
+
+            <ThemedText type="default" style={styles.closest}>
+              {nextClosestLocation}
+            </ThemedText>
+            <ThemedText type="default" style={styles.address}>
+              {nextClosestAddress}
+            </ThemedText>
+
+            {nextDistance !== null && (
+              <ThemedText type="default" style={styles.distance}>
+                Distance: {(nextDistance / 1609.34).toFixed(2)} miles
+              </ThemedText>
+            )}
+          </View>
         )}
       </ThemedView>
     </ParallaxScrollView>
@@ -115,7 +190,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 24,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -124,16 +198,29 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+  dealerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 6,
+    color: '#333',
+  },
   closest: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 6,
     textAlign: 'center',
-    color: 'black',
+    color: '#000',
+  },
+  address: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 6,
+    textAlign: 'center',
   },
   distance: {
     fontSize: 16,
-    color: '#555',
+    color: '#000',
     textAlign: 'center',
   },
 });
