@@ -84,7 +84,7 @@ export default function HomeScreen() {
             </ThemedText>
             {distanceToNearest !== null && (
               <ThemedText type="default" style={styles.distance}>
-                Distance: {(distanceToNearest / 1000).toFixed(2)} km
+                Distance: {(distanceToNearest / 1609.34).toFixed(2)} m
               </ThemedText>
             )}
           </View>
