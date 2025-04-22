@@ -15,8 +15,9 @@ const walserLocations = [
 ];
 
 export default function HomeScreen() {
-  const [closestLocation, setClosestLocation] = useState<string | null>(null);
-  const [distanceToNearest, setDistanceToNearest] = useState<number | null>(null);
+  const [nearestLocations, setNearestLocations] = useState<
+    { name: string; distance: number }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function HomeScreen() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setClosestLocation('Permission denied');
+          setNearestLocations([{ name: 'Permission denied', distance: 0 }]);
           setLoading(false);
           return;
         }
@@ -35,28 +36,19 @@ export default function HomeScreen() {
           longitude: location.coords.longitude,
         };
 
-        let nearest = walserLocations[0];
-        let minDistance = getDistance(userCoords, {
-          latitude: nearest.lat,
-          longitude: nearest.lon,
-        });
+        const sorted = walserLocations
+          .map((loc) => ({
+            name: loc.name,
+            distance: getDistance(userCoords, {
+              latitude: loc.lat,
+              longitude: loc.lon,
+            }),
+          }))
+          .sort((a, b) => a.distance - b.distance);
 
-        for (let i = 1; i < walserLocations.length; i++) {
-          const distance = getDistance(userCoords, {
-            latitude: walserLocations[i].lat,
-            longitude: walserLocations[i].lon,
-          });
-
-          if (distance < minDistance) {
-            nearest = walserLocations[i];
-            minDistance = distance;
-          }
-        }
-
-        setClosestLocation(nearest.name);
-        setDistanceToNearest(minDistance);
+        setNearestLocations(sorted.slice(0, 2));
       } catch (error) {
-        setClosestLocation('Unable to get location');
+        setNearestLocations([{ name: 'Unable to get location', distance: 0 }]);
       } finally {
         setLoading(false);
       }
@@ -74,20 +66,19 @@ export default function HomeScreen() {
       }
     >
       <ThemedView style={styles.content}>
-
         {loading ? (
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
-          <View style={styles.locationBox}>
-            <ThemedText type="default" style={styles.closest}>
-              Closest Location: {closestLocation}
-            </ThemedText>
-            {distanceToNearest !== null && (
-              <ThemedText type="default" style={styles.distance}>
-                Distance: {(distanceToNearest / 1609.34).toFixed(2)} m
+          nearestLocations.map((loc, index) => (
+            <View key={index} style={styles.locationBox}>
+              <ThemedText type="default" style={styles.closest}>
+                {index === 0 ? 'Closest Location:' : 'Next Closest:'} {loc.name}
               </ThemedText>
-            )}
-          </View>
+              <ThemedText type="default" style={styles.distance}>
+                Distance: {(loc.distance / 1609.34).toFixed(2)} miles
+              </ThemedText>
+            </View>
+          ))
         )}
       </ThemedView>
     </ParallaxScrollView>
@@ -120,6 +111,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 24,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
