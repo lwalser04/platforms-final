@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { Image, StyleSheet, ActivityIndicator, View } from 'react-native';
 
 import * as Location from 'expo-location';
 import { getDistance } from 'geolib';
@@ -16,43 +16,50 @@ const walserLocations = [
 
 export default function HomeScreen() {
   const [closestLocation, setClosestLocation] = useState<string | null>(null);
+  const [distanceToNearest, setDistanceToNearest] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setClosestLocation('Permission denied');
-        setLoading(false);
-        return;
-      }
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setClosestLocation('Permission denied');
+          setLoading(false);
+          return;
+        }
 
-      const location = await Location.getCurrentPositionAsync({});
-      const userCoords = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
+        const location = await Location.getCurrentPositionAsync({});
+        const userCoords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
 
-      let nearest = walserLocations[0];
-      let minDistance = getDistance(userCoords, {
-        latitude: nearest.lat,
-        longitude: nearest.lon,
-      });
-
-      for (let i = 1; i < walserLocations.length; i++) {
-        const distance = getDistance(userCoords, {
-          latitude: walserLocations[i].lat,
-          longitude: walserLocations[i].lon,
+        let nearest = walserLocations[0];
+        let minDistance = getDistance(userCoords, {
+          latitude: nearest.lat,
+          longitude: nearest.lon,
         });
 
-        if (distance < minDistance) {
-          nearest = walserLocations[i];
-          minDistance = distance;
-        }
-      }
+        for (let i = 1; i < walserLocations.length; i++) {
+          const distance = getDistance(userCoords, {
+            latitude: walserLocations[i].lat,
+            longitude: walserLocations[i].lon,
+          });
 
-      setClosestLocation(nearest.name);
-      setLoading(false);
+          if (distance < minDistance) {
+            nearest = walserLocations[i];
+            minDistance = distance;
+          }
+        }
+
+        setClosestLocation(nearest.name);
+        setDistanceToNearest(minDistance);
+      } catch (error) {
+        setClosestLocation('Unable to get location');
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -67,16 +74,20 @@ export default function HomeScreen() {
       }
     >
       <ThemedView style={styles.content}>
-        <ThemedText type="title" style={styles.title}>
-          Welcome to Walser Automotive
-        </ThemedText>
 
         {loading ? (
           <ActivityIndicator size="large" style={{ marginTop: 20 }} />
         ) : (
-          <ThemedText type="default" style={styles.closest}>
-            Closest Location: {closestLocation}
-          </ThemedText>
+          <View style={styles.locationBox}>
+            <ThemedText type="default" style={styles.closest}>
+              Closest Location: {closestLocation}
+            </ThemedText>
+            {distanceToNearest !== null && (
+              <ThemedText type="default" style={styles.distance}>
+                Distance: {(distanceToNearest / 1000).toFixed(2)} km
+              </ThemedText>
+            )}
+          </View>
         )}
       </ThemedView>
     </ParallaxScrollView>
@@ -104,9 +115,29 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  locationBox: {
+    backgroundColor: '#f2f2f2',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
   closest: {
     fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 6,
+    textAlign: 'center',
+    color: 'black',
+  },
+  distance: {
+    fontSize: 16,
+    color: '#555',
     textAlign: 'center',
   },
 });
-
