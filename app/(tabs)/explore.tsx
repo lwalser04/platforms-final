@@ -1,6 +1,14 @@
 // Import necessary dependencies from React and React Native
 import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Linking,
+  Platform,
+} from 'react-native';
 import { ThemedText } from '@/components/ThemedText';       // Custom themed text component
 import { ThemedView } from '@/components/ThemedView';       // Custom themed view component
 
@@ -43,8 +51,19 @@ export default function ExploreScreen() {
     loc.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Function to open directions in Apple Maps (iOS) or Google Maps (Android)
+  const openInMaps = (address: string) => {
+    const url = Platform.select({
+      ios: `http://maps.apple.com/?daddr=${encodeURIComponent(address)}`,
+      android: `http://maps.google.com/?daddr=${encodeURIComponent(address)}`,
+    });
+
+    Linking.openURL(url!).catch(err =>
+      console.error('Failed to open map:', err)
+    );
+  };
+
   return (
-    // Themed container view
     <ThemedView style={styles.container}>
       {/* Input field for searching locations */}
       <TextInput
@@ -57,17 +76,23 @@ export default function ExploreScreen() {
 
       {/* FlatList to render the list of filtered dealership locations */}
       <FlatList
-        data={filteredLocations}  // The filtered data based on user input
-        keyExtractor={(item) => item.name}  // Unique key for each item
+        data={filteredLocations}
+        keyExtractor={(item, index) => `${item.name}-${index}`}
         renderItem={({ item }) => (
-          // Touchable container for each location
-          <TouchableOpacity style={styles.itemBox}>
-            {/* Display the dealership name */}
+          <TouchableOpacity
+            style={styles.itemBox}
+            activeOpacity={0.7}
+            onPress={() => openInMaps(item.address)}
+          >
             <ThemedText type="subtitle" style={styles.name}>{item.name}</ThemedText>
-            {/* Display the dealership address */}
             <ThemedText type="default" style={styles.address}>{item.address}</ThemedText>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={
+          <ThemedText style={{ textAlign: 'center', marginTop: 20 }}>
+            No locations found.
+          </ThemedText>
+        }
       />
     </ThemedView>
   );
@@ -76,19 +101,19 @@ export default function ExploreScreen() {
 // Style definitions for the Explore screen elements
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 32, 
+    paddingTop: 32,
     paddingHorizontal: 16,
-    flex: 1, // Makes the view expand to fill the screen
+    flex: 1,
   },
   searchInput: {
     backgroundColor: '#f2f2f2',
     borderRadius: 10,
     padding: 12,
-    marginTop: 20,        
+    marginTop: 20,
     marginBottom: 16,
     fontSize: 16,
     color: '#000',
-  },  
+  },
   itemBox: {
     backgroundColor: '#fff',
     padding: 16,
@@ -98,7 +123,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2, 
+    elevation: 2,
   },
   name: {
     fontSize: 17,
