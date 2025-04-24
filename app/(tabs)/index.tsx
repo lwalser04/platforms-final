@@ -13,42 +13,48 @@ const walserLocations = [
     address: '4601 American Boulevard West Bloomington, MN 55437',
     lat: 44.85738,
     lon: -93.33818,
+    image: require('@/assets/images/gmcbloomington.jpg'),
   },
   {
     name: 'Walser Polar Chevrolet',
     address: '1801 County Road F East White Bear Lake, MN 55110',
     lat: 45.0597,
     lon: -93.0166,
+    image: require('@/assets/images/polarchev.jpg'),
   },
   {
     name: 'Walser Chrysler Jeep Dodge Ram',
     address: '314 Main Street Hopkins, MN 55343',
     lat: 44.9245,
     lon: -93.4018,
+    image: require('@/assets/images/cjd.jpg'),
   },
   {
     name: 'Walser Honda Burnsville',
     address: '14800 Buck Hill Road Burnsville, MN 55306',
     lat: 44.73305,
     lon: -93.28595,
+    image: require('@/assets/images/hondaburns.jpg'),
   },
   {
     name: 'Walser Genesis of Kansas City',
     address: '7722 Metcalf Ave Overland Park, KS 66204',
     lat: 38.9882762,
     lon: -94.668206,
+    image: require('@/assets/images/genesiswichita.jpg'),
   },
   {
     name: 'Walser Porsche Wichita',
     address: '10900 East 13th Street Wichita, KS 67206',
     lat: 37.7095,
     lon: -97.2155,
+    image: require('@/assets/images/porschewichita.jpg'),
   },
 ];
 
 export default function HomeScreen() {
   const [nearestLocations, setNearestLocations] = useState<
-    { name: string; address: string; lat: number; lon: number; distance: number }[]
+    { name: string; address: string; lat: number; lon: number; distance: number; image: any }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const colorScheme = useColorScheme();
@@ -63,7 +69,7 @@ export default function HomeScreen() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setNearestLocations([{ name: 'Permission denied', address: '', lat: 0, lon: 0, distance: 0 }]);
+          setNearestLocations([{ name: 'Permission denied', address: '', lat: 0, lon: 0, distance: 0, image: null }]);
           setLoading(false);
           return;
         }
@@ -76,10 +82,7 @@ export default function HomeScreen() {
 
         const sorted = walserLocations
           .map((loc) => ({
-            name: loc.name,
-            address: loc.address,
-            lat: loc.lat,
-            lon: loc.lon,
+            ...loc,
             distance: getDistance(userCoords, {
               latitude: loc.lat,
               longitude: loc.lon,
@@ -89,7 +92,7 @@ export default function HomeScreen() {
 
         setNearestLocations(sorted.slice(0, 2));
       } catch (error) {
-        setNearestLocations([{ name: 'Unable to get location', address: '', lat: 0, lon: 0, distance: 0 }]);
+        setNearestLocations([{ name: 'Unable to get location', address: '', lat: 0, lon: 0, distance: 0, image: null }]);
       } finally {
         setLoading(false);
       }
@@ -124,6 +127,7 @@ export default function HomeScreen() {
                 <ThemedText type="default" style={styles.closest}>
                   {index === 0 ? 'Closest Location:' : 'Next Closest:'}
                 </ThemedText>
+                {loc.image && <Image source={loc.image} style={styles.dealerImage} />}
                 <ThemedText type="default" style={styles.name}>
                   {loc.name}
                 </ThemedText>
@@ -215,5 +219,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     textDecorationLine: 'underline',
+  },
+  dealerImage: {
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
+    borderRadius: 8,
+    marginBottom: 10,
   },
 });
