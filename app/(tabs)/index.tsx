@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, ActivityIndicator, View, useColorScheme } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+  View,
+  useColorScheme,
+} from 'react-native';
 import * as Location from 'expo-location';
 import { getDistance } from 'geolib';
 import * as Linking from 'expo-linking';
+
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 
+// List of dealership locations with coordinates and image references
 const walserLocations = [
   {
     name: 'Walser Buick GMC Bloomington',
@@ -54,7 +62,14 @@ const walserLocations = [
 
 export default function HomeScreen() {
   const [nearestLocations, setNearestLocations] = useState<
-    { name: string; address: string; lat: number; lon: number; distance: number; image: any }[]
+    {
+      name: string;
+      address: string;
+      lat: number;
+      lon: number;
+      distance: number;
+      image?: any;
+    }[]
   >([]);
   const [loading, setLoading] = useState(true);
   const colorScheme = useColorScheme();
@@ -69,7 +84,15 @@ export default function HomeScreen() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setNearestLocations([{ name: 'Permission denied', address: '', lat: 0, lon: 0, distance: 0, image: null }]);
+          setNearestLocations([
+            {
+              name: 'Permission denied',
+              address: '',
+              lat: 0,
+              lon: 0,
+              distance: 0,
+            },
+          ]);
           setLoading(false);
           return;
         }
@@ -92,7 +115,15 @@ export default function HomeScreen() {
 
         setNearestLocations(sorted.slice(0, 2));
       } catch (error) {
-        setNearestLocations([{ name: 'Unable to get location', address: '', lat: 0, lon: 0, distance: 0, image: null }]);
+        setNearestLocations([
+          {
+            name: 'Unable to get location',
+            address: '',
+            lat: 0,
+            lon: 0,
+            distance: 0,
+          },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -127,7 +158,9 @@ export default function HomeScreen() {
                 <ThemedText type="default" style={styles.closest}>
                   {index === 0 ? 'Closest Location:' : 'Next Closest:'}
                 </ThemedText>
-                {loc.image && <Image source={loc.image} style={styles.dealerImage} />}
+                {loc.image && (
+                  <Image source={loc.image} style={styles.dealerImage} />
+                )}
                 <ThemedText type="default" style={styles.name}>
                   {loc.name}
                 </ThemedText>
@@ -155,12 +188,9 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   reactLogo: {
-    height: 280,
-    width: 390,
-    bottom: 0,
-    left: 0,
-    marginTop: 2,
-    position: 'absolute',
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover',
   },
   content: {
     paddingTop: 40,
