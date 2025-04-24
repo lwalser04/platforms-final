@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, ActivityIndicator, View } from 'react-native';
+import { Image, StyleSheet, ActivityIndicator, View, useColorScheme } from 'react-native';
 import * as Location from 'expo-location';
 import { getDistance } from 'geolib';
 import * as Linking from 'expo-linking';
-
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -52,6 +51,7 @@ export default function HomeScreen() {
     { name: string; address: string; lat: number; lon: number; distance: number }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const colorScheme = useColorScheme();
 
   const handleGetDirections = (lat: number, lon: number) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
@@ -101,7 +101,11 @@ export default function HomeScreen() {
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         <Image
-          source={require('@/assets/images/walserimage.png')}
+          source={
+            colorScheme === 'dark'
+              ? require('@/assets/images/walserimage.png')
+              : require('@/assets/images/walser_automotive_group_logo.jpg')
+          }
           style={styles.reactLogo}
         />
       }
@@ -165,7 +169,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 12,
-    color: 'black',
   },
   locationBox: {
     backgroundColor: '#f2f2f2',

@@ -1,13 +1,13 @@
 // Import necessary dependencies from React and React Native
 import React, { useState } from 'react';
 import {
-  View,
   FlatList,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   Linking,
   Platform,
+  useColorScheme, // Hook inside the component
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';       // Custom themed text component
 import { ThemedView } from '@/components/ThemedView';       // Custom themed view component
@@ -42,8 +42,8 @@ const walserLocations = [
 
 // Functional component representing the Explore screen
 export default function ExploreScreen() {
-  // State variable to hold the user's search input
   const [searchQuery, setSearchQuery] = useState('');
+  const colorScheme = useColorScheme(); // Hook inside component to determine color scheme
 
   // Filter the locations based on the search query (case-insensitive)
   const filteredLocations = walserLocations.filter((loc) =>
@@ -84,7 +84,9 @@ export default function ExploreScreen() {
             activeOpacity={0.7}
             onPress={() => openInMaps(item.address)}
           >
-            <ThemedText type="subtitle" style={styles.name}>{item.name}</ThemedText>
+            <ThemedText type="subtitle" style={[styles.name, { color: '#333' }]}>
+              {item.name}
+            </ThemedText>
             <ThemedText type="default" style={styles.address}>{item.address}</ThemedText>
           </TouchableOpacity>
         )}
