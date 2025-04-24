@@ -150,14 +150,11 @@ export default function HomeScreen() {
         ) : (
           <>
             <ThemedText type="title" style={styles.findingLabel}>
-              Finding your closest dealership:
+              Find nearby dealerships:
             </ThemedText>
 
             {nearestLocations.map((loc, index) => (
               <View key={index} style={styles.locationBox}>
-                <ThemedText type="default" style={styles.closest}>
-                  {index === 0 ? 'Closest Location:' : 'Next Closest:'}
-                </ThemedText>
                 {loc.image && (
                   <Image source={loc.image} style={styles.dealerImage} />
                 )}
